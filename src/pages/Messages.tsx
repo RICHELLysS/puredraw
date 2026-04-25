@@ -114,6 +114,15 @@ export default function Messages() {
 
     setChats(list);
     setListLoading(false);
+
+    // 首次加载时自动选中 AI 助手（若 URL 没有指定对话对象）
+    setSelectedUserId(prev => {
+      if (!prev && list.length > 0) {
+        const aiChat = list.find(c => c.user.id === AI_ASSISTANT_ID);
+        return aiChat ? aiChat.user.id : list[0].user.id;
+      }
+      return prev;
+    });
   }, [profile, t]);
 
   useEffect(() => {
@@ -197,11 +206,6 @@ export default function Messages() {
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!newMessage.trim() || !profile || !selectedUserId) return;
-    // AI 助手不可回复
-    if (selectedUserId === AI_ASSISTANT_ID) {
-      toast.info(t("messages.aiReadOnly"));
-      return;
-    }
     const optimistic: Message = {
       id: `opt-${Date.now()}`,
       sender_id: profile.id,
@@ -347,7 +351,7 @@ export default function Messages() {
                         </span>
                         {isAI && (
                           <Badge className="text-[9px] h-4 px-1 bg-primary/15 text-primary border-primary/20 shrink-0">
-                            官方
+                            AI bot
                           </Badge>
                         )}
                       </div>
@@ -426,7 +430,7 @@ export default function Messages() {
                     <h3 className="font-bold text-sm">{otherUser.username}</h3>
                     {isAiChat && (
                       <Badge className="text-[9px] h-4 px-1 bg-primary/15 text-primary border-primary/20">
-                        官方
+                        AI bot
                       </Badge>
                     )}
                   </div>
@@ -541,14 +545,8 @@ export default function Messages() {
 
           {/* 输入区域 */}
           <div className="p-3 border-t bg-background shrink-0">
-            {isAiChat ? (
-              <div className="flex items-center gap-2 px-4 py-2 bg-muted/40 rounded-xl text-xs text-muted-foreground">
-                <Bot className="w-4 h-4 shrink-0" />
-                <span>{t("messages.aiReadOnly")}</span>
-              </div>
-            ) : (
-              <form onSubmit={handleSend} className="flex gap-2 items-center">
-                {/* 发起约稿按钮 */}
+            <form onSubmit={handleSend} className="flex gap-2 items-center">
+                {/* 发起约稿按钮（非AI对话时显示）*/}
                 {!isAiChat && profile.role === "client" && (
                   <Dialog open={isCommDialogOpen} onOpenChange={setIsCommDialogOpen}>
                     <DialogTrigger asChild>
@@ -627,7 +625,6 @@ export default function Messages() {
                   <Send className="h-4 w-4" />
                 </Button>
               </form>
-            )}
           </div>
         </>
       ) : (
@@ -650,18 +647,18 @@ export default function Messages() {
       {/* 页面容器：大屏左右分栏，小屏根据状态切换 */}
       <div className="flex flex-1 rounded-2xl border-2 overflow-hidden sketch-card bg-card shadow-md min-h-0">
 
-        {/* ── 左侧会话列表 ── */}
+        {/* ── 左侧会话列表 (3/10) ── */}
         <div className={`
-          w-full lg:w-80 xl:w-96 border-r shrink-0 flex flex-col
+          w-full lg:w-[30%] border-r shrink-0 flex flex-col
           ${mobileShowChat ? "hidden lg:flex" : "flex"}
         `}>
           {ConversationList}
         </div>
 
-        {/* ── 右侧聊天窗口 ── */}
+        {/* ── 右侧聊天窗口 (7/10) ── */}
         <div className={`
-          flex-1 flex flex-col min-w-0
-          ${mobileShowChat ? "flex" : "hidden lg:flex"}
+          lg:w-[70%] flex flex-col min-w-0
+          ${mobileShowChat ? "flex w-full" : "hidden lg:flex"}
         `}>
           {ChatPanel}
         </div>
