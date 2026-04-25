@@ -206,11 +206,12 @@ export default function Messages() {
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!newMessage.trim() || !profile || !selectedUserId) return;
+    const msgContent = newMessage;
     const optimistic: Message = {
       id: `opt-${Date.now()}`,
       sender_id: profile.id,
       receiver_id: selectedUserId,
-      content: newMessage,
+      content: msgContent,
       commission_id: null,
       is_read: false,
       created_at: new Date().toISOString(),
@@ -218,11 +219,25 @@ export default function Messages() {
     setMessages((prev) => [...prev, optimistic]);
     setNewMessage("");
     setTimeout(() => scrollToBottom(), 50);
-    const { error } = await api.sendMessage(profile.id, selectedUserId, newMessage);
+
+    const { error } = await api.sendMessage(profile.id, selectedUserId, msgContent);
     if (error) {
       toast.error(t("messages.sendFailed"));
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+      return;
     }
+
+    // 向 AI bot 发消息后触发关键词自动回复
+    if (isAiChat) {
+      const { error: fnErr } = await supabase.functions.invoke("ai-auto-reply", {
+        body: { user_id: profile.id, content: msgContent },
+      });
+      if (fnErr) {
+        const detail = await fnErr?.context?.text?.();
+        console.error("ai-auto-reply error:", detail || fnErr.message);
+      }
+    }
+
     loadChats();
   };
 
