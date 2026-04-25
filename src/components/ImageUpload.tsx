@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { compressImage } from "@/lib/utils";
@@ -21,10 +22,11 @@ export function ImageUpload({
   folder = "general",
   bucketName = "puredraw_images",
   maxSizeMB = 1,
-  label = "上传图片",
+  label,  // default handled via t() inside component
   aspectRatio = "auto",
   className = "",
 }: ImageUploadProps) {
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -39,7 +41,7 @@ export function ImageUpload({
     // 格式校验
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"];
     if (!allowedTypes.includes(selectedFile.type)) {
-      toast.error("不支持的文件格式，请上传图片文件");
+      toast.error(t("imageUpload.unsupported"));
       return;
     }
 
@@ -48,7 +50,7 @@ export function ImageUpload({
     
     // 如果文件超过限制，提示将进行压缩
     if (selectedFile.size > maxSizeMB * 1024 * 1024) {
-      setCompressionStatus("文件超过 1MB，正在自动压缩中...");
+      setCompressionStatus(t("imageUpload.compressing"));
     } else {
       setCompressionStatus(null);
     }
@@ -65,11 +67,11 @@ export function ImageUpload({
       let fileToUpload = file;
       
       if (file.size > maxSizeInBytes) {
-        setCompressionStatus("正在压缩图片...");
+        setCompressionStatus(t("imageUpload.inProgress"));
         fileToUpload = await compressImage(file, maxSizeInBytes);
         const finalSizeMB = (fileToUpload.size / (1024 * 1024)).toFixed(2);
-        setCompressionStatus(`压缩完成，最终大小: ${finalSizeMB}MB`);
-        toast.info(`图片已自动压缩至 ${finalSizeMB}MB`);
+        setCompressionStatus(`${t("imageUpload.compressed")}: ${finalSizeMB}MB`);
+        toast.info(`${t("imageUpload.compressedToast")} ${finalSizeMB}MB`);
       }
       
       setProgress(30);
@@ -97,7 +99,7 @@ export function ImageUpload({
         .getPublicUrl(filePath);
 
       setProgress(100);
-      toast.success("图片上传成功！");
+      toast.success(t("imageUpload.success"));
       onUploadSuccess(publicUrl);
       
       // 重置状态
@@ -108,7 +110,7 @@ export function ImageUpload({
 
     } catch (err: any) {
       console.error("Upload error:", err);
-      toast.error("上传失败: " + err.message);
+      toast.error(t("imageUpload.failed") + ": " + err.message);
       setIsUploading(false);
       setProgress(0);
     }
@@ -134,8 +136,8 @@ export function ImageUpload({
         <label className={`flex flex-col items-center justify-center border-2 border-dashed border-primary/30 rounded-2xl cursor-pointer hover:bg-primary/5 transition-all p-6 ${aspectRatioClass}`}>
           <div className="flex flex-col items-center text-center">
             <Upload className="w-8 h-8 text-primary mb-2" />
-            <p className="font-bold text-sm">{label}</p>
-            <p className="text-xs text-muted-foreground mt-1">支持 JPG, PNG, WEBP (最大 1MB)</p>
+            <p className="font-bold text-sm">{label ?? t("imageUpload.label")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("imageUpload.hint")}</p>
           </div>
           <input
             ref={fileInputRef}
@@ -164,7 +166,7 @@ export function ImageUpload({
           {isUploading && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white p-4">
               <Loader2 className="w-8 h-8 animate-spin mb-2" />
-              <p className="text-sm font-bold">正在上传...</p>
+              <p className="text-sm font-bold">{t("imageUpload.uploading")}</p>
               <Progress value={progress} className="w-3/4 h-2 mt-2 bg-white/20" />
             </div>
           )}
@@ -183,7 +185,7 @@ export function ImageUpload({
           onClick={handleUpload} 
           className="w-full h-10 cat-button font-bold"
         >
-          确认上传
+          {t("imageUpload.confirm")}
         </Button>
       )}
     </div>

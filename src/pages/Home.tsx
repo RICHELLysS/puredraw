@@ -74,7 +74,7 @@ export default function Home() {
         >
           <div className="space-y-2">
             <h3 className="text-2xl font-bold">{t('gallery.digital')}</h3>
-            <p className="text-muted-foreground">{language === 'en' ? 'Digital illustration, character design, game art' : '数字绘画，插画设计，游戏立绘'}</p>
+            <p className="text-muted-foreground">{language === 'en' ? 'Digital illustration, character design, game art' : t('gallery.digitalDesc') || '数字绘画，插画设计，游戏立绘'}</p>
             <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
               {t('common.viewMore')} <ChevronRight className="w-4 h-4" />
             </span>
@@ -87,7 +87,7 @@ export default function Home() {
         >
           <div className="space-y-2">
             <h3 className="text-2xl font-bold">{t('gallery.handdrawn')}</h3>
-            <p className="text-muted-foreground">{language === 'en' ? 'Watercolor, sketch, oil painting, traditional art' : '水彩素描，油画国画，传统艺术'}</p>
+            <p className="text-muted-foreground">{language === 'en' ? 'Watercolor, sketch, oil painting, traditional art' : t('gallery.handdrawnDesc') || '水彩素描，油画国画，传统艺术'}</p>
             <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
               {t('common.viewMore')} <ChevronRight className="w-4 h-4" />
             </span>
@@ -119,8 +119,8 @@ export default function Home() {
       <section className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h2 className="text-3xl font-black tracking-tight">{language === 'en' ? 'Featured Artists' : '推荐画师'}</h2>
-            <p className="text-muted-foreground">{language === 'en' ? 'Meet the artists who will inspire you' : '遇见让你心动的灵魂画笔'}</p>
+            <h2 className="text-3xl font-black tracking-tight">{t('home.featuredArtists')}</h2>
+            <p className="text-muted-foreground">{t('home.featuredDesc')}</p>
           </div>
           <Button variant="ghost" onClick={() => navigate("/artists")}>{t('common.viewMore')}</Button>
         </div>
@@ -151,7 +151,7 @@ export default function Home() {
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-6 text-white translate-y-full group-hover:translate-y-0 transition-transform">
                     <p className="font-bold text-lg">{artist.username}</p>
                     <p className="text-sm opacity-80">
-                      {artist.style_preference === 'digital' ? t('gallery.digital') : t('gallery.handdrawn')} · {artist.bio || (language === 'en' ? 'No bio yet' : '该画师比较懒...')}
+                      {artist.style_preference === 'digital' ? t('gallery.digital') : t('gallery.handdrawn')} · {artist.bio || t('home.noBio')}
                     </p>
                   </div>
                 </Link>
@@ -166,7 +166,7 @@ export default function Home() {
             ))
           ) : (
             <div className="col-span-full text-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed">
-              <p className="text-muted-foreground">{language === 'en' ? 'No artists yet. Be the first certified artist! 🐾' : '暂时没有画师，快去成为第一位认证画师吧！🐾'}</p>
+              <p className="text-muted-foreground">{t('home.noArtists')}</p>
               <Button onClick={() => navigate("/verify")} className="mt-4">{t('verify.submitBtn')}</Button>
             </div>
           )}

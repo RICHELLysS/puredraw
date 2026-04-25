@@ -27,11 +27,16 @@ interface ChatSession {
   lastMessage: Message;
 }
 
-function getStatusText(status: CommissionStatus) {
+function getStatusText(status: CommissionStatus, t: (k: string) => string) {
   const map: Record<string, string> = {
-    pending_agreement: "协商需求中", agreed: "待付定金", deposit_paid: "制作草图中",
-    sketch_uploaded: "草图确认中", final_uploaded: "制作成图中",
-    completed: "已完成", reported: "举报仲裁中", refunded: "已退款",
+    pending_agreement: t("chat.statusNegotiating"),
+    agreed: t("chat.statusAgreed"),
+    deposit_paid: t("chat.statusSketching"),
+    sketch_uploaded: t("chat.statusSketchReview"),
+    final_uploaded: t("chat.statusFinalizing"),
+    completed: t("chat.statusCompleted"),
+    reported: t("chat.statusDisputed"),
+    refunded: t("chat.statusRefunded"),
   };
   return map[status] || status;
 }
@@ -262,7 +267,7 @@ export default function Messages() {
       await api.sendMessage(
         profile.id,
         selectedUserId,
-        `[系统消息] 我发起了一份约稿需求，请查收。需求描述：${commForm.description.slice(0, 20)}...`
+        `${t("chat.systemMsgPrefix")} ${t("chat.commSentMsg")}：${commForm.description.slice(0, 20)}...`
       );
       toast.success(t("messages.commissionSent"));
     } catch (err: any) {
@@ -279,7 +284,7 @@ export default function Messages() {
     try {
       await api.updateCommissionStatus(activeCommission.id, "agreed");
       setActiveCommission({ ...activeCommission, status: "agreed" });
-      await api.sendMessage(profile.id, selectedUserId, "[系统消息] 我已接受您的约稿需求，请支付定金。");
+      await api.sendMessage(profile.id, selectedUserId, t("commission.toast.acceptMsg"));
       toast.success(t("messages.commissionAccepted"));
     } catch (err: any) {
       toast.error(err.message);
@@ -468,7 +473,7 @@ export default function Messages() {
               >
                 <CreditCard className="w-3.5 h-3.5 text-primary" />
                 <span className="font-bold text-primary">{t("messages.activeCommission")}</span>
-                <span className="text-muted-foreground">{getStatusText(activeCommission.status)}</span>
+                <span className="text-muted-foreground">{getStatusText(activeCommission.status, t as (k: string) => string)}</span>
                 <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
             )}
@@ -485,12 +490,12 @@ export default function Messages() {
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm">
-                <p>打个招呼吧，开启一段纯净的艺术交流 🐾</p>
+                <p>{t("chat.sayHi")}</p>
               </div>
             ) : (
               messages.map((msg) => {
                 const isMine = msg.sender_id === profile.id;
-                const isSystem = msg.content.startsWith("[系统消息]");
+                const isSystem = msg.content.startsWith("[系统消息]") || msg.content.startsWith("[System]");
                 return (
                   <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                     {!isMine && (
@@ -530,7 +535,7 @@ export default function Messages() {
                   <CreditCard className="w-4 h-4 text-primary" />
                   <span className="text-xs font-bold text-primary">{t("messages.activeCommission")}</span>
                   <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground">{getStatusText(activeCommission.status)}</span>
+                  <span className="text-xs text-muted-foreground">{getStatusText(activeCommission.status, t as (k: string) => string)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -571,13 +576,13 @@ export default function Messages() {
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle>发起约稿需求</DialogTitle>
+                        <DialogTitle>{t("chat.commissionRequest")}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label>需求描述</Label>
+                          <Label>{t("chat.reqLabel")}</Label>
                           <Textarea
-                            placeholder="请详细描述您的约稿需求，如风格、构图、用途等..."
+                            placeholder={t("chat.reqPlaceholder")}
                             rows={4}
                             value={commForm.description}
                             onChange={(e) => setCommForm({ ...commForm, description: e.target.value })}
@@ -585,7 +590,7 @@ export default function Messages() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>约稿价格 (起价 ¥70)</Label>
+                            <Label>{t("chat.priceLabel")}</Label>
                             <Input
                               type="number"
                               min={70}
@@ -594,13 +599,13 @@ export default function Messages() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label>定金 (固定)</Label>
-                            <Input disabled value="¥30" className="bg-muted" />
+                            <Label>{t("chat.depositFixed")}</Label>
+                            <Input disabled value={t("chat.depositFixedValue")} className="bg-muted" />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>草图截止时间</Label>
+                            <Label>{t("chat.sketchDeadline")}</Label>
                             <Input
                               type="date"
                               value={commForm.sketch_deadline}
@@ -608,7 +613,7 @@ export default function Messages() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label>成图截止时间</Label>
+                            <Label>{t("chat.finalDeadline")}</Label>
                             <Input
                               type="date"
                               value={commForm.final_deadline}
@@ -623,7 +628,7 @@ export default function Messages() {
                           onClick={handleCreateCommission}
                           disabled={chatLoading}
                         >
-                          {chatLoading ? <Loader2 className="animate-spin" /> : "发送需求"}
+                          {chatLoading ? <Loader2 className="animate-spin" /> : t("chat.sendReq")}
                         </Button>
                       </DialogFooter>
                     </DialogContent>

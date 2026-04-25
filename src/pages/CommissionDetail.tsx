@@ -9,16 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Upload, Calendar, DollarSign, ArrowLeft, MessageCircle, AlertTriangle, CheckCircle2, FileImage, ShieldCheck, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { zhCN } from "date-fns/locale";
+import { zhCN, enUS } from "date-fns/locale";
 import QRCodeDataUrl from "@/components/ui/qrcodedataurl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ImageUpload } from "@/components/ImageUpload";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function CommissionDetail() {
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
+  const dateLocale = language === "en" ? enUS : zhCN;
   const [commission, setCommission] = useState<Commission | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPayQR, setShowPayQR] = useState(false);
@@ -42,7 +45,7 @@ export default function CommissionDetail() {
     setShowPayQR(true);
     
     // 模拟支付逻辑：轮询或直接提供支付按钮
-    toast.info("支付通道已建立，请扫码支付 🐾");
+    toast.info(t("commission.payModal.scanOpened"));
   };
 
   const simulatePaymentSuccess = async () => {
@@ -51,10 +54,10 @@ export default function CommissionDetail() {
     
     const { error } = await api.updateCommissionStatus(commission.id, nextStatus as CommissionStatus);
     if (!error) {
-      toast.success(payType === 'deposit' ? "定金支付成功，订单已开启！" : "尾款支付成功，交易已完成！");
+      toast.success(payType === 'deposit' ? t("commission.toast.depositPaid") : t("commission.toast.finalPaid"));
       setShowPayQR(false);
       loadData();
-      await api.sendMessage(profile!.id, profile!.role === 'artist' ? commission.client_id : commission.artist_id, `[系统消息] 我已完成支付，请查收。`);
+      await api.sendMessage(profile!.id, profile!.role === 'artist' ? commission.client_id : commission.artist_id, t("commission.toast.paymentMsg"));
     }
   };
 
@@ -68,11 +71,11 @@ export default function CommissionDetail() {
       const { error } = await api.updateCommissionStatus(commission.id, nextStatus as CommissionStatus, updates);
       if (error) throw error;
 
-      toast.success(type === 'sketch' ? "草图已上传！" : "成图已上传，请等待约稿人确认。");
+      toast.success(type === 'sketch' ? t("commission.toast.sketchUploaded") : t("commission.toast.finalUploaded"));
       loadData();
-      await api.sendMessage(profile!.id, commission.client_id, `[系统消息] 我已上传了${type === 'sketch' ? '草图' : '成图'}，请前往详情页查看。`);
+      await api.sendMessage(profile!.id, commission.client_id, type === 'sketch' ? t("commission.toast.sketchMsg") : t("commission.toast.finalMsg"));
     } catch (err: any) {
-      toast.error("保存失败: " + err.message);
+      toast.error(t("commission.toast.uploadFailed") + ": " + err.message);
     }
   };
 
@@ -88,7 +91,7 @@ export default function CommissionDetail() {
 
     const { error } = await api.updateCommissionStatus(commission.id, 'deposit_paid');
     if (!error) {
-      toast.success("草图已确认，请画师继续完成成图！");
+      toast.success(t("commission.toast.sketchConfirmed"));
       loadData();
     }
   };
@@ -98,13 +101,13 @@ export default function CommissionDetail() {
     // 规则：退 25 元定金找下一个
     const { error } = await api.updateCommissionStatus(commission.id, 'refunded');
     if (!error) {
-      toast.success("已为您退回 25 元定金，欢迎寻找下一位心仪画师 🐾");
+      toast.success(t("commission.toast.refunded"));
       navigate("/artists");
     }
   };
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!commission) return <div className="text-center py-20">约稿未找到 🐾</div>;
+  if (!commission) return <div className="text-center py-20">{t("commission.notFound")}</div>;
 
   const isArtist = profile?.id === commission.artist_id;
   const isClient = profile?.id === commission.client_id;
@@ -112,7 +115,7 @@ export default function CommissionDetail() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent" onClick={() => navigate(-1)}>
-        <ArrowLeft className="w-4 h-4 mr-2" /> 返回消息
+        <ArrowLeft className="w-4 h-4 mr-2" /> {t("commission.backToMessages")}
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -121,17 +124,17 @@ export default function CommissionDetail() {
           <Card className="sketch-card border-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div className="space-y-1">
-                <CardTitle className="text-2xl font-black">约稿详情</CardTitle>
-                <p className="text-sm text-muted-foreground">订单 ID: {commission.id.slice(0, 8)}</p>
+                <CardTitle className="text-2xl font-black">{t("commission.title")}</CardTitle>
+                <p className="text-sm text-muted-foreground">{t("commission.orderId")}: {commission.id.slice(0, 8)}</p>
               </div>
               <Badge className="px-4 py-1 h-fit text-sm" variant={commission.status === 'completed' ? 'secondary' : 'default'}>
-                {getStatusText(commission.status)}
+                {getStatusText(commission.status, t as (k: string) => string)}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <h4 className="font-bold flex items-center gap-2">
-                  <FileImage className="w-4 h-4 text-primary" /> 需求描述
+                  <FileImage className="w-4 h-4 text-primary" /> {t("commission.description")}
                 </h4>
                 <div className="p-4 bg-muted/30 rounded-xl text-sm leading-relaxed whitespace-pre-wrap">
                   {commission.description}
@@ -140,14 +143,14 @@ export default function CommissionDetail() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">截止时间</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("commission.deadlineLabel")}</p>
                   <p className="font-bold flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-primary" />
-                    {format(new Date(commission.final_deadline), 'yyyy-MM-dd', { locale: zhCN })}
+                    {format(new Date(commission.final_deadline), language === 'en' ? 'yyyy-MM-dd' : 'yyyy-MM-dd', { locale: dateLocale })}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">约稿总额</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("commission.totalLabel")}</p>
                   <p className="font-bold text-2xl text-primary flex items-center gap-1">
                     <DollarSign className="w-5 h-5" />
                     {commission.price}
@@ -156,11 +159,11 @@ export default function CommissionDetail() {
               </div>
 
               <div className="pt-4 border-t space-y-4">
-                <h4 className="font-bold">作品交付区</h4>
+                <h4 className="font-bold">{t("commission.deliveryArea")}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Sketch Box */}
                   <div className="space-y-3">
-                    <p className="text-sm font-medium">草图环节</p>
+                    <p className="text-sm font-medium">{t("commission.sketchSection")}</p>
                     <div className="aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center bg-muted/20 relative overflow-hidden">
                       {commission.sketch_url ? (
                         <div className="w-full h-full">
@@ -171,28 +174,28 @@ export default function CommissionDetail() {
                           <ImageUpload 
                             onUploadSuccess={(url) => handleUploadSuccess('sketch', url)}
                             folder={`commissions/${commission.id}`}
-                            label="上传草图"
+                            label={t("commission.uploadSketch")}
                             aspectRatio="video"
                           />
                         </div>
                       ) : (
                         <div className="text-center p-4">
                           <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                          <p className="text-xs text-muted-foreground">暂无草图</p>
+                          <p className="text-xs text-muted-foreground">{t("commission.noSketch")}</p>
                         </div>
                       )}
                     </div>
                     {isClient && commission.status === 'sketch_uploaded' && (
                       <div className="flex gap-2">
-                        <Button size="sm" className="flex-1 cat-button font-bold" onClick={() => handleConfirm(true)}>确认草图</Button>
-                        <Button size="sm" variant="outline" onClick={() => toast.info("请通过对话框与画师沟通修改需求")}>申请修改</Button>
+                        <Button size="sm" className="flex-1 cat-button font-bold" onClick={() => handleConfirm(true)}>{t("commission.confirmSketch")}</Button>
+                        <Button size="sm" variant="outline" onClick={() => toast.info(t("commission.revisionTip"))}>{t("commission.requestRevision")}</Button>
                       </div>
                     )}
                   </div>
 
                   {/* Final Box */}
                   <div className="space-y-3">
-                    <p className="text-sm font-medium">成图环节</p>
+                    <p className="text-sm font-medium">{t("commission.finalSection")}</p>
                     <div className="aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center bg-muted/20 relative overflow-hidden">
                       {commission.final_url ? (
                         <div className="w-full h-full">
@@ -203,20 +206,20 @@ export default function CommissionDetail() {
                           <ImageUpload 
                             onUploadSuccess={(url) => handleUploadSuccess('final', url)}
                             folder={`commissions/${commission.id}`}
-                            label="上传成图"
+                            label={t("commission.uploadFinal")}
                             aspectRatio="video"
                           />
                         </div>
                       ) : (
                         <div className="text-center p-4">
                           <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                          <p className="text-xs text-muted-foreground">暂无成图</p>
+                          <p className="text-xs text-muted-foreground">{t("commission.noFinal")}</p>
                         </div>
                       )}
                     </div>
                     {isClient && commission.status === 'final_uploaded' && (
                       <div className="flex gap-2">
-                        <Button size="sm" className="flex-1 cat-button font-bold" onClick={() => handleConfirm(false)}>确认收货并付尾款</Button>
+                        <Button size="sm" className="flex-1 cat-button font-bold" onClick={() => handleConfirm(false)}>{t("commission.confirmAndPay")}</Button>
                       </div>
                     )}
                   </div>
@@ -231,12 +234,10 @@ export default function CommissionDetail() {
                 <ShieldCheck className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h3 className="text-2xl font-black">协商达成，请支付定金</h3>
-                <p className="text-muted-foreground mt-2">支付定金后画师将开始创作。定金由平台托管，确保双方权益 🐾</p>
+                <h3 className="text-2xl font-black">{t("commission.depositTitle")}</h3>
+                <p className="text-muted-foreground mt-2">{t("commission.depositDesc")}</p>
               </div>
-              <Button size="lg" className="h-14 px-12 text-xl font-bold cat-button" onClick={() => handlePay('deposit')}>
-                支付定金 ¥30
-              </Button>
+              <Button size="lg" className="h-14 px-12 text-xl font-bold cat-button" onClick={() => handlePay('deposit')}>{t("commission.payDepositBtn")}</Button>
             </div>
           )}
         </div>
@@ -245,7 +246,7 @@ export default function CommissionDetail() {
         <div className="space-y-6">
           <Card className="sketch-card overflow-hidden">
             <CardHeader className="bg-muted/30 pb-4">
-              <CardTitle className="text-lg">约稿对象</CardTitle>
+              <CardTitle className="text-lg">{t("commission.counterpart")}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
               <div className="flex items-center gap-3">
@@ -255,37 +256,32 @@ export default function CommissionDetail() {
                 </Avatar>
                 <div>
                   <p className="font-bold">{(isArtist ? commission.client?.username : commission.artist?.username)}</p>
-                  <p className="text-xs text-muted-foreground">{isArtist ? "约稿人" : "画师"}</p>
+                  <p className="text-xs text-muted-foreground">{isArtist ? t("commission.clientLabel") : t("commission.artistLabel")}</p>
                 </div>
               </div>
               <Button variant="outline" className="w-full" onClick={() => navigate(`/messages/${isArtist ? commission.client_id : commission.artist_id}`)}>
-                <MessageCircle className="w-4 h-4 mr-2" /> 发送消息
+                <MessageCircle className="w-4 h-4 mr-2" /> {t("commission.sendMessage")}
               </Button>
             </CardContent>
           </Card>
 
           <Card className="sketch-card overflow-hidden bg-muted/10 border-dashed">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-orange-500" />
-                售后保障
-              </CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-orange-500" />{t("commission.afterSale")}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-4 text-xs text-muted-foreground">
-              <p>1. 画师交付草图前，您可以随时终止约稿，定金不予退还。</p>
-              <p>2. 草图阶段若不满意，可申请重画或终止约稿并退回 ¥25 定金。</p>
-              <p>3. 收到成图后若发现 AI 生成迹象，24 小时内可发起举报，核实后退款 80%。</p>
+              <p>1. {t("commission.afterSale1")}</p>
+              <p>2. {t("commission.afterSale2")}</p>
+              <p>3. {t("commission.afterSale3")}</p>
               
               {isClient && ['deposit_paid', 'sketch_uploaded'].includes(commission.status) && (
                 <Button variant="ghost" size="sm" className="w-full text-red-500 h-8 hover:text-red-600 hover:bg-red-50" onClick={handleRefund}>
-                  终止约稿并退 25 元
+                  {t("commission.terminateBtn")}
                 </Button>
               )}
               
               {isClient && commission.status === 'completed' && (
-                <Button variant="ghost" size="sm" className="w-full text-orange-500 h-8" onClick={() => toast.info("举报功能开发中，请在收到图后24h内联系客服")}>
-                  举报 AI 生成
-                </Button>
+                <Button variant="ghost" size="sm" className="w-full text-orange-500 h-8" onClick={() => toast.info(t("commission.reportPending"))}>{t("commission.reportAI")}</Button>
               )}
             </CardContent>
           </Card>
@@ -296,7 +292,7 @@ export default function CommissionDetail() {
       <Dialog open={showPayQR} onOpenChange={setShowPayQR}>
         <DialogContent className="sm:max-w-xs text-center">
           <DialogHeader>
-            <DialogTitle>{payType === 'deposit' ? '支付定金' : '支付尾款'}</DialogTitle>
+            <DialogTitle>{payType === 'deposit' ? t("commission.payModal.deposit") : t("commission.payModal.balance")}</DialogTitle>
           </DialogHeader>
           <div className="py-6 flex flex-col items-center gap-4">
             <div className="p-4 bg-card rounded-2xl shadow-inner border">
@@ -307,17 +303,15 @@ export default function CommissionDetail() {
             </div>
             <div className="space-y-1">
               <p className="text-2xl font-black text-primary">¥{payType === 'deposit' ? 30 : commission.price - 30}</p>
-              <p className="text-sm text-muted-foreground">请使用微信扫码支付</p>
+              <p className="text-sm text-muted-foreground">{t("commission.payModal.scanTip")}</p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold">
               <CheckCircle2 className="w-3 h-3" />
-              微信支付加密协议
+              {t("commission.payModal.wechat")}
             </div>
           </div>
           <DialogFooter>
-            <Button className="w-full cat-button" onClick={simulatePaymentSuccess}>
-              模拟支付成功 (测试用)
-            </Button>
+            <Button className="w-full cat-button" onClick={simulatePaymentSuccess}>{t("commission.payModal.testBtn")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -325,16 +319,16 @@ export default function CommissionDetail() {
   );
 }
 
-function getStatusText(status: CommissionStatus) {
+function getStatusText(status: CommissionStatus, t: (k: string) => string) {
   const map: Record<string, string> = {
-    pending_agreement: "协商需求中",
-    agreed: "待付定金",
-    deposit_paid: "进行中",
-    sketch_uploaded: "草图已上传",
-    final_uploaded: "成图已上传",
-    completed: "已完成",
-    reported: "举报仲裁中",
-    refunded: "已退款"
+    pending_agreement: t("commission.statusMap.pending_agreement"),
+    agreed: t("commission.statusMap.agreed"),
+    deposit_paid: t("commission.statusMap.deposit_paid"),
+    sketch_uploaded: t("commission.statusMap.sketch_uploaded"),
+    final_uploaded: t("commission.statusMap.final_uploaded"),
+    completed: t("commission.statusMap.completed"),
+    reported: t("commission.statusMap.reported"),
+    refunded: t("commission.statusMap.refunded"),
   };
   return map[status] || status;
 }

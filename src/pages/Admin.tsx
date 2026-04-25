@@ -105,7 +105,7 @@ export default function Admin() {
 
     const handleSave = async (values: { keyword: string; reply: string; priority: number }) => {
       if (!values.keyword.trim() || !values.reply.trim()) {
-        toast.error("关键词和回复内容不能为空");
+        toast.error(t("admin.keywords.emptyCheck"));
         return;
       }
       setSaving(true);
@@ -116,18 +116,18 @@ export default function Admin() {
             .update({ keyword: values.keyword, reply: values.reply, priority: values.priority })
             .eq("id", editTarget.id);
           if (error) throw error;
-          toast.success("关键词已更新");
+          toast.success(t("admin.keywords.updated"));
         } else {
           const { error } = await (supabase as any)
             .from("bot_keywords")
             .insert({ keyword: values.keyword, reply: values.reply, priority: values.priority });
           if (error) throw error;
-          toast.success("关键词已添加");
+          toast.success(t("admin.keywords.added"));
         }
         setDialogOpen(false);
         loadKeywords();
       } catch (err: any) {
-        toast.error("保存失败：" + (err.message || "未知错误"));
+        toast.error(t("admin.keywords.saveFailed") + "：" + (err.message || ""));
       } finally {
         setSaving(false);
       }
@@ -135,8 +135,8 @@ export default function Admin() {
 
     const handleDelete = async (id: string) => {
       const { error } = await (supabase as any).from("bot_keywords").delete().eq("id", id);
-      if (error) { toast.error("删除失败"); return; }
-      toast.success("已删除");
+      if (error) { toast.error(t("admin.keywords.deleteFailed")); return; }
+      toast.success(t("admin.keywords.deleted"));
       setDeleteId(null);
       loadKeywords();
     };
@@ -157,13 +157,13 @@ export default function Admin() {
               <Bot className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-black text-lg">蜗牛猫关键词回复管理</h3>
-              <p className="text-xs text-muted-foreground">优先级越高的关键词越先被匹配。消息中含多个关键词时，返回优先级最高的回复。</p>
+              <h3 className="font-black text-lg">{t("admin.keywords.title")}</h3>
+              <p className="text-xs text-muted-foreground">{t("admin.keywords.desc")}</p>
             </div>
           </div>
           <Button className="cat-button gap-2" onClick={openCreate}>
             <Plus className="w-4 h-4" />
-            新增关键词
+            {t("admin.keywords.add")}
           </Button>
         </div>
 
@@ -173,8 +173,8 @@ export default function Admin() {
           <Card className="sketch-card border-2">
             <CardContent className="py-20 text-center text-muted-foreground">
               <Bot className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="font-bold">暂无关键词</p>
-              <p className="text-sm mt-1">点击"新增关键词"添加第一条回复规则</p>
+              <p className="font-bold">{t("admin.keywords.empty")}</p>
+              <p className="text-sm mt-1">{t("admin.keywords.emptyDesc")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -242,7 +242,7 @@ export default function Admin() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>{editTarget ? "编辑关键词回复" : "新增关键词回复"}</DialogTitle>
+              <DialogTitle>{editTarget ? t("admin.keywords.editTitle") : t("admin.keywords.addTitle")}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4 py-2">
@@ -251,9 +251,9 @@ export default function Admin() {
                   name="keyword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>关键词（用户消息包含此词即触发）</FormLabel>
+                      <FormLabel>{t("admin.keywords.keywordLabel")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="例如：认证、价格、退款..." {...field} />
+                        <Input placeholder={t("admin.keywords.keywordPlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -264,10 +264,10 @@ export default function Admin() {
                   name="reply"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>自动回复内容</FormLabel>
+                      <FormLabel>{t("admin.keywords.replyLabel")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="输入蜗牛猫小助手的回复内容..."
+                          placeholder={t("admin.keywords.replyPlaceholder")}
                           rows={5}
                           {...field}
                         />
@@ -281,7 +281,7 @@ export default function Admin() {
                   name="priority"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>优先级（数字越大越优先匹配）</FormLabel>
+                      <FormLabel>{t("admin.keywords.priorityLabel")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -299,7 +299,7 @@ export default function Admin() {
                     variant="outline"
                     onClick={() => setDialogOpen(false)}
                   >
-                    取消
+                    {t("admin.keywords.cancel")}
                   </Button>
                   <Button type="submit" className="cat-button" disabled={saving}>
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "保存"}
@@ -314,13 +314,13 @@ export default function Admin() {
         <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>确认删除</DialogTitle>
+              <DialogTitle>{t("admin.keywords.deleteTitle")}</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-muted-foreground py-2">删除后该关键词将不再触发自动回复，确认继续？</p>
+            <p className="text-sm text-muted-foreground py-2">{t("admin.keywords.deleteDesc")}</p>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteId(null)}>取消</Button>
+              <Button variant="outline" onClick={() => setDeleteId(null)}>{t("admin.keywords.cancel")}</Button>
               <Button variant="destructive" onClick={() => deleteId && handleDelete(deleteId)}>
-                确认删除
+                {t("admin.keywords.confirmDelete")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -350,7 +350,7 @@ export default function Admin() {
             {t('admin.reportTab')}
           </TabsTrigger>
           <TabsTrigger value="keywords" className="px-8 rounded-lg">
-            关键词回复
+            {t("admin.keywords.tab")}
           </TabsTrigger>
         </TabsList>
 
