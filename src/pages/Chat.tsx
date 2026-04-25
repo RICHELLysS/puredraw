@@ -365,7 +365,7 @@ function getStatusText(status: CommissionStatus) {
     sketch_uploaded: "草图确认中",
     final_uploaded: "制作成图中",
     completed: "已完成",
-    reported: "举报仲裁中",
+    reported: "反馈下架审核中",
     refunded: "已退款"
   };
   return map[status] || status;
