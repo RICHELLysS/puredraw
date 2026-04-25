@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 20 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 10% 10%;
+    --primary: 330 81% 60%; /* 粉色 #F06292 风格 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 330 30% 98%; /* 浅粉色背景 */
+    --secondary-foreground: 330 10% 10%;
+    --muted: 330 5% 96%;
+    --muted-foreground: 330 5% 45%;
+    --accent: 330 81% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 330 10% 90%;
+    --input: 330 10% 90%;
+    --ring: 330 81% 60%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 20 10% 5%;
+    --foreground: 20 5% 95%;
+    --card: 20 10% 7%;
+    --card-foreground: 20 5% 95%;
+    --popover: 20 10% 7%;
+    --popover-foreground: 20 5% 95%;
+    --primary: 330 81% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 330 10% 12%;
+    --secondary-foreground: 330 5% 95%;
+    --muted: 330 10% 12%;
+    --muted-foreground: 330 5% 65%;
+    --accent: 330 81% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 330 10% 20%;
+    --input: 330 10% 20%;
+    --ring: 330 81% 60%;
+  }
+
+  /* 绿色主题 */
+  [data-theme="green"] {
+    --background: 0 0% 6%; /* 更深的黑色背景 */
+    --foreground: 0 0% 98%;
+    --card: 0 0% 10%; /* 深色卡片 */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 10%; /* 深色弹窗 */
+    --popover-foreground: 0 0% 98%;
+    --primary: 166 70% 50%; /* 青绿色 #26D0A8 风格 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 166 20% 12%; /* 深色次要背景 */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 166 10% 14%; /* 深色静音背景 */
+    --muted-foreground: 166 5% 70%;
+    --accent: 166 70% 50%; /* 绿色强调色 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 166 15% 22%; /* 绿色系边框 */
+    --input: 166 15% 18%; /* 深色输入框 */
+    --ring: 166 70% 50%; /* 绿色焦点环 */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+  
+  :root {
+    background-image: radial-gradient(circle at 1px 1px, #f0f0f0 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+  
+  [data-theme="green"] {
+    background-image: radial-gradient(circle at 1px 1px, rgba(38, 208, 168, 0.1) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+}
+
+/* 猫猫简笔画风格的圆润边框和手绘感 */
+.sketch-card {
+  border: 2px solid hsl(var(--border));
+  border-radius: 1rem;
+  box-shadow: 4px 4px 0px hsl(var(--border));
+  transition: all 0.2s ease-in-out;
+}
+
+.sketch-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.cat-button {
+  @apply relative overflow-hidden transition-all duration-300;
+  border: 2px solid hsl(var(--primary) / 0.3);
+  margin: 1px;
+}
+
+button {
+  border: 2px solid hsl(var(--primary) / 0.3);
+  margin: 1px;
+}
+
+.cat-button:active {
+  transform: scale(0.95);
+}

@@ -1,0 +1,1 @@
+ALTER TABLE profiles ADD COLUMN artist_tags TEXT[] NOT NULL DEFAULT '{}';

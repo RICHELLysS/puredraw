@@ -1,0 +1,6 @@
+{
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "npx vite build --config vite.config.prod.ts",
+  "outputDirectory": "dist",
+  "framework": "vite"
+}
