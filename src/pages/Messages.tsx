@@ -79,7 +79,24 @@ export default function Messages() {
   // 移动端：是否显示聊天窗口
   const [mobileShowChat, setMobileShowChat] = useState(false);
 
+  // 快捷问题
+  const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ── 快捷问题加载（AI 对话时从 bot_keywords 读取） ──
+  useEffect(() => {
+    const loadQuickQuestions = async () => {
+      const { data } = await (supabase as any)
+        .from("bot_keywords")
+        .select("keyword")
+        .eq("show_as_quick_question", true)
+        .order("priority", { ascending: false })
+        .limit(6);
+      if (data) setQuickQuestions((data as { keyword: string }[]).map((d) => d.keyword));
+    };
+    loadQuickQuestions();
+  }, []);
   const dateLocale = language === "en" ? enUS : zhCN;
 
   // ── 加载会话列表 ──
@@ -205,6 +222,41 @@ export default function Messages() {
     setSelectedUserId(userId);
     setMobileShowChat(true);
     navigate(`/messages/${userId}`, { replace: true });
+  };
+
+  // ── 快捷问题点击 ──
+  const handleQuickQuestion = (keyword: string) => {
+    setNewMessage(keyword);
+    // 延迟一帧确保 state 已更新，直接调用 handleSend 逻辑
+    setTimeout(() => {
+      if (!profile || !selectedUserId) return;
+      const msgContent = keyword;
+      const optimistic = {
+        id: `opt-${Date.now()}`,
+        sender_id: profile.id,
+        receiver_id: selectedUserId,
+        content: msgContent,
+        commission_id: null,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, optimistic]);
+      setNewMessage("");
+      setTimeout(() => scrollToBottom(), 50);
+      api.sendMessage(profile.id, selectedUserId, msgContent).then(({ error }) => {
+        if (error) {
+          toast.error(t("messages.sendFailed"));
+          setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+          return;
+        }
+        supabase.functions.invoke("ai-auto-reply", {
+          body: { user_id: profile.id, content: msgContent },
+        }).then(({ error: fnErr }) => {
+          if (fnErr) fnErr.context?.text?.().then((d: string) => console.error("ai-auto-reply:", d));
+        });
+        loadChats();
+      });
+    }, 0);
   };
 
   // ── 发送消息 ──
@@ -564,7 +616,28 @@ export default function Messages() {
           )}
 
           {/* 输入区域 */}
-          <div className="p-3 border-t bg-background shrink-0">
+          <div className="border-t bg-background shrink-0">
+            {/* 快捷问题按钮区（仅 AI 对话时显示） */}
+            {isAiChat && quickQuestions.length > 0 && (
+              <div className="px-3 pt-3 pb-1">
+                <p className="text-[10px] text-muted-foreground mb-2 font-medium tracking-wide uppercase flex items-center gap-1">
+                  <span>⚡</span> {t("quickQ.title")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {quickQuestions.map((kw) => (
+                    <button
+                      key={kw}
+                      type="button"
+                      onClick={() => handleQuickQuestion(kw)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40 transition-all duration-150 active:scale-95"
+                    >
+                      {kw}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="p-3">
             <form onSubmit={handleSend} className="flex gap-2 items-center">
                 {/* 发起约稿按钮（非AI对话时显示）*/}
                 {!isAiChat && profile.role === "client" && (
@@ -645,6 +718,7 @@ export default function Messages() {
                   <Send className="h-4 w-4" />
                 </Button>
               </form>
+            </div>
           </div>
         </>
       ) : (

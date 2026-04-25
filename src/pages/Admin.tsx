@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert, CheckCircle, XCircle, User, AlertTriangle,
          Bot, Plus, Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
@@ -23,6 +24,7 @@ interface BotKeyword {
   keyword: string;
   reply: string;
   priority: number;
+  show_as_quick_question: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -75,8 +77,8 @@ export default function Admin() {
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
-    const form = useForm<{ keyword: string; reply: string; priority: number }>({
-      defaultValues: { keyword: "", reply: "", priority: 0 },
+    const form = useForm<{ keyword: string; reply: string; priority: number; show_as_quick_question: boolean }>({
+      defaultValues: { keyword: "", reply: "", priority: 0, show_as_quick_question: false },
     });
 
     const loadKeywords = async () => {
@@ -93,17 +95,17 @@ export default function Admin() {
 
     const openCreate = () => {
       setEditTarget(null);
-      form.reset({ keyword: "", reply: "", priority: 0 });
+      form.reset({ keyword: "", reply: "", priority: 0, show_as_quick_question: false });
       setDialogOpen(true);
     };
 
     const openEdit = (kw: BotKeyword) => {
       setEditTarget(kw);
-      form.reset({ keyword: kw.keyword, reply: kw.reply, priority: kw.priority });
+      form.reset({ keyword: kw.keyword, reply: kw.reply, priority: kw.priority, show_as_quick_question: kw.show_as_quick_question });
       setDialogOpen(true);
     };
 
-    const handleSave = async (values: { keyword: string; reply: string; priority: number }) => {
+    const handleSave = async (values: { keyword: string; reply: string; priority: number; show_as_quick_question: boolean }) => {
       if (!values.keyword.trim() || !values.reply.trim()) {
         toast.error(t("admin.keywords.emptyCheck"));
         return;
@@ -113,14 +115,14 @@ export default function Admin() {
         if (editTarget) {
           const { error } = await (supabase as any)
             .from("bot_keywords")
-            .update({ keyword: values.keyword, reply: values.reply, priority: values.priority })
+            .update({ keyword: values.keyword, reply: values.reply, priority: values.priority, show_as_quick_question: values.show_as_quick_question })
             .eq("id", editTarget.id);
           if (error) throw error;
           toast.success(t("admin.keywords.updated"));
         } else {
           const { error } = await (supabase as any)
             .from("bot_keywords")
-            .insert({ keyword: values.keyword, reply: values.reply, priority: values.priority });
+            .insert({ keyword: values.keyword, reply: values.reply, priority: values.priority, show_as_quick_question: values.show_as_quick_question });
           if (error) throw error;
           toast.success(t("admin.keywords.added"));
         }
@@ -202,10 +204,15 @@ export default function Admin() {
 
                     {/* 内容 */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         <Badge className="bg-primary/10 text-primary border-primary/20 font-bold text-xs">
                           #{kw.keyword}
                         </Badge>
+                        {kw.show_as_quick_question && (
+                          <Badge variant="secondary" className="text-xs gap-1">
+                            ⚡ {t("quickQ.title")}
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3">
                         {kw.reply}
@@ -290,6 +297,30 @@ export default function Admin() {
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="show_as_quick_question"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/20">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-sm font-medium">
+                            ⚡ {t("admin.keywords.showQuick")}
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            {t("admin.keywords.showQuickTip")}
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </div>
                     </FormItem>
                   )}
                 />
