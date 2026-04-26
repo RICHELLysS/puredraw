@@ -333,7 +333,7 @@ export default function Admin() {
                     {t("admin.keywords.cancel")}
                   </Button>
                   <Button type="submit" className="cat-button" disabled={saving}>
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "保存"}
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("admin.keywords.save")}
                   </Button>
                 </DialogFooter>
               </form>

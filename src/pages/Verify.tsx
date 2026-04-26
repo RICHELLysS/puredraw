@@ -95,7 +95,7 @@ export default function Verify() {
       for (let i = 0; i < artworkUrls.length; i++) {
         await api.createArtwork({
           artist_id: profile.id,
-          title: `认证作品 ${i + 1}`,
+          title: `${t('verify.artworkTitleBase')} ${i + 1}`,
           image_url: artworkUrls[i],
           type: stylePreference,
           is_for_verification: true,
@@ -216,7 +216,7 @@ export default function Verify() {
 
             {selectedTags.length > 0 && (
               <div className="flex flex-wrap gap-2 p-3 bg-primary/5 rounded-xl border border-primary/10">
-                <span className="text-xs text-muted-foreground mr-1 self-center">已选：</span>
+                <span className="text-xs text-muted-foreground mr-1 self-center">{t('verify.selectedTags')}</span>
                 {selectedTags.map(k => {
                   const found = ARTIST_TAGS.find(t => t.key === k);
                   return (
@@ -281,7 +281,7 @@ export default function Verify() {
                 : <Clock className="w-4 h-4 shrink-0" />}
               <span className="font-medium">
                 {artworkUrls.length >= 3
-                  ? `已上传 ${artworkUrls.length} 张，可以提交了`
+                  ? `${artworkUrls.length} ${t('verify.uploadedReady')}`
                   : `${t('verify.step2.minHint')} (${artworkUrls.length}/3)`}
               </span>
             </div>

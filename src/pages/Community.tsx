@@ -47,8 +47,8 @@ export default function Community() {
   };
 
   const handleCreatePost = async () => {
-    if (!profile) return toast.error("请先登录");
-    if (!newPost.title || !newPost.content) return toast.error("请填写标题和内容");
+    if (!profile) return toast.error(t('community.loginToPost'));
+    if (!newPost.title || !newPost.content) return toast.error(t('community.fillForm'));
 
     setIsSubmitting(true);
     try {

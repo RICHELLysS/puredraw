@@ -77,7 +77,7 @@ export default function UserProfile() {
 
   // 角色标签文本
   const getRoleBadgeText = () => {
-    if (profile.role === 'admin') return language === 'en' ? 'Admin' : '管理员';
+    if (profile.role === 'admin') return t('profile.admin');
     if (profile.role === 'artist' && isVerifiedArtist) return t('profile.verified');
     if (profile.role === 'artist') return t('profile.artist');
     return t('profile.client');
@@ -164,7 +164,7 @@ export default function UserProfile() {
             )}
 
             <p className="text-muted-foreground text-lg italic">
-              "{profile.bio || (language === 'en' ? 'Every stroke carries warmth 🐾' : '每一笔都是心意，每一画都是温度 🐾')}"
+              "{profile.bio || t('profile.bioDefault')}"
             </p>
           </div>
 

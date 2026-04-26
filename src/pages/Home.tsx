@@ -74,7 +74,7 @@ export default function Home() {
         >
           <div className="space-y-2">
             <h3 className="text-2xl font-bold">{t('gallery.digital')}</h3>
-            <p className="text-muted-foreground">{language === 'en' ? 'Digital illustration, character design, game art' : t('gallery.digitalDesc') || '数字绘画，插画设计，游戏立绘'}</p>
+            <p className="text-muted-foreground">{t('gallery.digitalDesc')}</p>
             <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
               {t('common.viewMore')} <ChevronRight className="w-4 h-4" />
             </span>
@@ -87,7 +87,7 @@ export default function Home() {
         >
           <div className="space-y-2">
             <h3 className="text-2xl font-bold">{t('gallery.handdrawn')}</h3>
-            <p className="text-muted-foreground">{language === 'en' ? 'Watercolor, sketch, oil painting, traditional art' : t('gallery.handdrawnDesc') || '水彩素描，油画国画，传统艺术'}</p>
+            <p className="text-muted-foreground">{t('gallery.handdrawnDesc')}</p>
             <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
               {t('common.viewMore')} <ChevronRight className="w-4 h-4" />
             </span>
