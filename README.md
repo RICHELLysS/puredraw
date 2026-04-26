@@ -1,3 +1,7 @@
+# 欢迎使用你的秒哒应用代码包
+秒哒应用链接
+    URL:https://www.miaoda.cn/projects/app-a7q1uwj0b669
+
 # 纯画 · PureDraw
 
 > 🐱 专注原创，拒绝 AI —— 让每一笔都有温度
